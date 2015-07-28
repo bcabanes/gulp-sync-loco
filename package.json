@@ -27,8 +27,14 @@
   },
   "homepage": "https://github.com/bcabanes/gulp-sync-loco",
   "dependencies": {
+    "chalk": "^1.1.0",
     "gulp-util": "^3.0.6",
+    "json-stable-stringify": "^1.0.0",
     "lodash": "^3.10.0",
-    "request-promise": "^0.4.3"
+    "request-promise": "^0.4.3",
+    "through2": "^2.0.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0"
   }
 }
