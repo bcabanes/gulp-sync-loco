@@ -7,6 +7,8 @@
     function synchronise () {
         return gulp.src('fixtures/tokens-en.json')
             .pipe(syncLoco({
+                lang: ['en', 'fr'],
+                apiKeyPath: './loco.api.key'
                 // Some options here.
             }));
     }
