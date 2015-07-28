@@ -25,5 +25,10 @@
   "bugs": {
     "url": "https://github.com/bcabanes/gulp-sync-loco/issues"
   },
-  "homepage": "https://github.com/bcabanes/gulp-sync-loco"
+  "homepage": "https://github.com/bcabanes/gulp-sync-loco",
+  "dependencies": {
+    "gulp-util": "^3.0.6",
+    "lodash": "^3.10.0",
+    "request-promise": "^0.4.3"
+  }
 }
