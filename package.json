@@ -1,0 +1,29 @@
+{
+  "name": "gulp-sync-loco",
+  "version": "0.0.1",
+  "description": "Gulp task to synchronise translations between localise.biz and your local json files.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bcabanes/gulp-sync-loco.git"
+  },
+  "keywords": [
+    "loco",
+    "localisation",
+    "translation",
+    "localize",
+    "loco.biz",
+    "translate",
+    "tokens",
+    "gulpplugin"
+  ],
+  "author": "Ben",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bcabanes/gulp-sync-loco/issues"
+  },
+  "homepage": "https://github.com/bcabanes/gulp-sync-loco"
+}
