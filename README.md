@@ -1,2 +1,2 @@
 # gulp-loco
-Gulp task to synchronise translations between https://localise.biz and your local json files.
+Gulp task to synchronize translations between https://localise.biz and your local json files.
