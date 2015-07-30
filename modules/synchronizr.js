@@ -43,8 +43,101 @@ var locoApi = require('./locoApi');
  * localization file with translations.
  */
 function Synchronizr (options) {
-    this.locales = options.lang;
     this.api = new locoApi(options.apiKey);
 }
+
+/**
+ * TODO: use mapping like [en][en_US, en_CA] ...
+ */
+Synchronizr.prototype.convertLocale = function (locale) {
+    return locale + '_CA';
+};
+
+Synchronizr.prototype.testLocale = function (locale) {
+    var self = this,
+        convertedLocale = this.convertLocale(locale),
+        locoLocales = [];
+
+    this.api
+        .getLocales()
+        .then(function (apiLocales) {
+            _.each(apiLocales, function (apiLocale) {
+                locoLocales.push(apiLocale.code);
+            });
+
+            if (locoLocales.indexOf(convertedLocale) === -1) {
+                locoLocales.push(convertedLocale);
+                self.api
+                    .addLocale({code: convertedLocale});
+            }
+        });
+
+    gutil.log('locales: ', this.locales);
+};
+
+Synchronizr.prototype.createTags = function () {
+    var self = this,
+        tags = ['webapp'];
+
+    this.api
+        .getTags()
+        .then(function (apiTags) {
+            _.each(tags, function (tag) {
+                if (apiTags.indexOf(tag) === -1) {
+                    self.api
+                        .createTag({name: tag});
+                }
+            });
+        });
+}
+
+Synchronizr.prototype.sync = function (tags, content) {
+    var self = this;
+
+    this.api
+        .getAssets(tags)
+        .then(function (apiAssets) {
+            var fileTokens = _.clone(content);
+            _.each(content, function (assetValue, assetToken) {
+                _.each(apiAssets, function(apiAsset) {
+                    if (apiAsset.name === assetToken) {
+                        gutil.log(chalk.yellow(
+                            'Skip existing asset ' + assetToken
+                        ));
+                        delete fileTokens[assetToken];
+                    }
+                });
+
+                // TODO: make this an option.
+                // Will not import null value.
+                if (typeof assetValue === null) {
+                    fileTokens[assetToken] = '';
+                }
+
+                gutil.log(chalk.yellow(
+                    'Import asset: ' + assetToken
+                ));
+            });
+
+            // Import tokens to api.
+            self.api
+                .importAsync('fr_CA', fileTokens)
+                .then(function () {
+                    // Tag new tokens and set them to fuzzy status.
+                    _.each(fileTokens, function (token, tokenKey) {
+                        _.each(tags, function (tag) {
+                            self.api
+                                .tagAsset(tokenKey, tag);
+                        });
+
+                        if (token !== '') {
+                            self.api
+                                .setStatus(tokenKey, 'fuzzy', 'fr_CA');
+                        }
+                    });
+
+                });
+        });
+};
 
 module.exports = Synchronizr;

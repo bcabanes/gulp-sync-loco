@@ -8,7 +8,7 @@ var through = require('through2');
 /**
  * Interns.
  */
-var synchronizr = require('./modules/synchronizr');
+var Synchronizr = require('./modules/synchronizr');
 
 /**
  * Constants.
@@ -70,7 +70,10 @@ function gulpSyncLoco (options) {
              * Start synchronizing with Loco
              */
             var content = file.contents.toString();
-            var sync = new synchronizr(options);
+            var sync = new Synchronizr(options);
+            sync.testLocale('fr');
+            sync.createTags();
+            sync.sync(['webapp'], JSON.parse(content));
             gutil.log(chalk.blue(content));
         }
     });
