@@ -81,7 +81,15 @@ locoApi.prototype.importProgress = function (id) {
 };
 
 locoApi.prototype.exportLocale = function (locale, extension, tags) {
-    // body...
+    var options = {
+        method: 'GET',
+        qs: {
+            filter: tags.join(', ')
+        },
+        uri: this.baseUrl + '/export/locale/' + locale + '.' + extension + '?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
 /**
@@ -89,13 +97,12 @@ locoApi.prototype.exportLocale = function (locale, extension, tags) {
  * @param  {array} tags Array of tags.
  */
 locoApi.prototype.getAssets = function (tags) {
-    var self = this;
     var options = {
         method: 'GET',
-        form: {
+        qs: {
             filter: tags.join(', ')
         },
-        uri: this.baseUrl + '/tags?key=' + this.apiKey
+        uri: this.baseUrl + '/assets?key=' + this.apiKey
     };
 
     return request(options);
