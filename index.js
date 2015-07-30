@@ -25,7 +25,7 @@ function gulpSyncLoco (options) {
     /**
      * Check lang parameter.
      */
-    if (!_.isArray(options.lang) || !options.lang.length) {
+    if (!options.lang) {
         throw new gutil.PluginError(PLUGIN_NAME,
                 chalk.red('Param lang required.'));
     }
@@ -71,11 +71,12 @@ function gulpSyncLoco (options) {
              */
             var content = file.contents.toString();
             var sync = new Synchronizr(options);
-            sync.testLocale('fr');
-            sync.createTags();
-            sync.sync(['webapp'], JSON.parse(content));
-            gutil.log(chalk.blue(content));
+            sync.testLocale(options.lang);
+            sync.createTags(options.tags);
+            sync.sync(options.lang, options.tags, JSON.parse(content));
         }
+
+        callback();
     });
 }
 
