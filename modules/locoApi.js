@@ -16,33 +16,71 @@ function locoApi (key) {
 
     /* jshint validthis: true */
     this.apiKey = key;
+    this.baseUrl = 'https://localise.biz/api';
 }
 
 locoApi.prototype.getLocales = function () {
-    // body...
+    var options = {
+        method: 'GET',
+        uri: this.baseUrl + '/locales?key=' + this.apiKey
+    };
+    return request(options);
+};
+
+locoApi.prototype.addLocale = function (localeData) {
+    var self = this;
+    var options = {
+        method: 'POST',
+        form: localeData,
+        uri: this.baseUrl + '/locales?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
 locoApi.prototype.exportLocale = function (locale, extension, tags) {
     // body...
 };
 
-locoApi.prototype.addLocale = function (locale) {
-    // body...
-};
-
 locoApi.prototype.getTags = function () {
-    // body...
+    var options = {
+        method: 'GET',
+        uri: this.baseUrl + '/tags?key=' + this.apiKey
+    };
+    return request(options);
 };
 
-locoApi.prototype.createTag = function (tagName) {
-    // body...
+locoApi.prototype.createTag = function (tag) {
+    var self = this;
+    var options = {
+        method: 'POST',
+        form: tag,
+        uri: this.baseUrl + '/tags?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
 locoApi.prototype.importAsync = function (locale, assets) {
-    // body...
+    var self = this;
+    var options = {
+        method: 'POST',
+        form: {
+            async: true,
+            locale: locale,
+            src: JSON.stringify(assets)
+        },
+        uri: this.baseUrl + '/import/json?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
 locoApi.prototype.importProgress = function (id) {
+    // body...
+};
+
+locoApi.prototype.exportLocale = function (locale, extension, tags) {
     // body...
 };
 
@@ -51,15 +89,44 @@ locoApi.prototype.importProgress = function (id) {
  * @param  {array} tags Array of tags.
  */
 locoApi.prototype.getAssets = function (tags) {
-    // body...
+    var self = this;
+    var options = {
+        method: 'GET',
+        form: {
+            filter: tags.join(', ')
+        },
+        uri: this.baseUrl + '/tags?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
-locoApi.prototype.tagAsset = function (id, tag) {
-    // body...
+locoApi.prototype.tagAsset = function (assetId, tag) {
+    var self = this;
+    var options = {
+        method: 'POST',
+        form: {
+            name: tag
+        },
+        uri: this.baseUrl + '/assets/' + assetId + '/tags?key=' + this.apiKey
+    };
+
+    return request(options);
 };
 
-locoApi.prototype.setStatus = function (assetId, flag, locale) {
-    // body...
+locoApi.prototype.setStatus = function (translationId, flag, locale) {
+    var self = this;
+    var options = {
+        method: 'POST',
+        form: {
+            flag: flag
+        },
+        uri: this.baseUrl + '/translations/' + translationId + '/' + locale + '/flag?key=' + this.apiKey
+    };
+
+    return request(options).catch(function (response) {
+gutil.log(chalk.red(JSON.stringify(response)));
+    });
 };
 
 module.exports = locoApi;
