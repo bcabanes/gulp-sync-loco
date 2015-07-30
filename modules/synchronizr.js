@@ -71,13 +71,10 @@ Synchronizr.prototype.testLocale = function (locale) {
                     .addLocale({code: convertedLocale});
             }
         });
-
-    gutil.log('locales: ', this.locales);
 };
 
-Synchronizr.prototype.createTags = function () {
-    var self = this,
-        tags = ['webapp'];
+Synchronizr.prototype.createTags = function (tags) {
+    var self = this;
 
     this.api
         .getTags()
@@ -91,22 +88,30 @@ Synchronizr.prototype.createTags = function () {
         });
 }
 
-Synchronizr.prototype.sync = function (tags, content) {
-    var self = this;
+Synchronizr.prototype.sync = function (locale, tags, content) {
+    var skipToken = false,
+        self = this;
 
     this.api
         .getAssets(tags)
         .then(function (apiAssets) {
             var fileTokens = _.clone(content);
-            _.each(content, function (assetValue, assetToken) {
-                _.each(apiAssets, function(apiAsset) {
-                    if (apiAsset.name === assetToken) {
-                        gutil.log(chalk.yellow(
-                            'Skip existing asset ' + assetToken
+            _.each(fileTokens, function (assetValue, assetToken) {
+                _.each(JSON.parse(apiAssets), function(apiAssetValue, apiAssetKey) {
+                    if (apiAssetValue.id === assetToken) {
+                        gutil.log(chalk.blue(
+                            'Skip existing asset: ' + assetToken + '.'
                         ));
                         delete fileTokens[assetToken];
+                        skipToken = true;
+                        return;
                     }
                 });
+
+                if (skipToken) {
+                    skipToken = false;
+                    return;
+                }
 
                 // TODO: make this an option.
                 // Will not import null value.
@@ -115,9 +120,20 @@ Synchronizr.prototype.sync = function (tags, content) {
                 }
 
                 gutil.log(chalk.yellow(
-                    'Import asset: ' + assetToken
+                    'Import asset: ' + assetToken + '.'
                 ));
             });
+
+            if (Object.keys(fileTokens).length < 1) {
+                gutil.log(chalk.green(
+                    'No token to synchronize.'
+                ));
+                return;
+            }
+
+            gutil.log(chalk.yellow(
+                'Will import '+ Object.keys(fileTokens).length +' asset(s).'
+            ));
 
             // Import tokens to api.
             self.api
