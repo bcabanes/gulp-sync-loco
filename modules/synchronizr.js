@@ -12,6 +12,7 @@ var through = require('through2');
 var locoApi = require('./locoApi');
 
 /**
+ * TODO: Add write file method
  * Synchronizr
  * This synchronize the local json token with Loco.
  * @param {object} options Synchronize Loco's options.
