@@ -94,12 +94,13 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
     var skipToken = false,
         self = this;
 
-    this.api
+    return this.api
         .exportLocale(locale, tags)
         .then(function (apiAssets) {
+            var flatApiAssets = flatten(JSON.parse(apiAssets));
             var fileTokens = _.clone(content);
             _.each(fileTokens, function (assetValue, assetToken) {
-                _.each(flatten(JSON.parse(apiAssets)), function(apiAssetValue, apiAssetKey) {
+                _.each(flatApiAssets, function(apiAssetValue, apiAssetKey) {
                     if (apiAssetKey === assetToken) {
                         gutil.log(chalk.blue(
                             'Skip existing asset translated: ' + assetToken + '.'
@@ -130,7 +131,7 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
                 gutil.log(chalk.green(
                     'No token to synchronize.'
                 ));
-                return;
+                return _.extend(fileTokens, flatApiAssets);
             }
 
             gutil.log(chalk.yellow(
@@ -139,7 +140,7 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
 
             // Import tokens to api.
             self.api
-                .importAsync('fr_CA', fileTokens)
+                .importAsync(locale, fileTokens)
                 .then(function () {
                     // Tag new tokens and set them to fuzzy status.
                     _.each(fileTokens, function (token, tokenKey) {
@@ -150,11 +151,12 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
 
                         if (token !== '') {
                             self.api
-                                .setStatus(tokenKey, 'fuzzy', 'fr_CA');
+                                .setStatus(tokenKey, 'fuzzy', locale);
                         }
                     });
 
                 });
+            return _.extend(fileTokens, flatApiAssets);
         });
 };
 
