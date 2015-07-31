@@ -1,6 +1,7 @@
 'use strict';
 var _ = require('lodash');
 var chalk = require('chalk');
+var flatten = require('flat');
 var gutil = require('gulp-util');
 var request = require('request-promise');
 var stringify = require('json-stable-stringify');
@@ -87,21 +88,21 @@ Synchronizr.prototype.createTags = function (tags) {
                 }
             });
         });
-}
+};
 
 Synchronizr.prototype.sync = function (locale, tags, content) {
     var skipToken = false,
         self = this;
 
     this.api
-        .getAssets(tags)
+        .exportLocale(locale, tags)
         .then(function (apiAssets) {
             var fileTokens = _.clone(content);
             _.each(fileTokens, function (assetValue, assetToken) {
-                _.each(JSON.parse(apiAssets), function(apiAssetValue, apiAssetKey) {
-                    if (apiAssetValue.id === assetToken) {
+                _.each(flatten(JSON.parse(apiAssets)), function(apiAssetValue, apiAssetKey) {
+                    if (apiAssetKey === assetToken) {
                         gutil.log(chalk.blue(
-                            'Skip existing asset: ' + assetToken + '.'
+                            'Skip existing asset translated: ' + assetToken + '.'
                         ));
                         delete fileTokens[assetToken];
                         skipToken = true;
