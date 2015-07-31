@@ -88,18 +88,19 @@ locoApi.prototype.importAsync = function (locale, assets) {
     var options = {
         method: 'POST',
         qs: {
-            key: this.apiKey
+            // async: true,
+            // index: 'id',
+            key: this.apiKey,
+            locale: locale
         },
         form: {
-            async: true,
-            locale: locale,
             src: JSON.stringify(assets)
         },
         uri: this.baseUrl + '/import/json'
     };
-
     return request(options);
 };
+
 
 locoApi.prototype.importProgress = function (id) {
     // body...
