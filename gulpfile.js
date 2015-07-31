@@ -9,9 +9,10 @@
             .pipe(syncLoco({
                 lang: 'en_CA',
                 apiKeyPath: './loco.api.key',
-                tags: ['webapp', 'otherTag']
+                tags: ['webapp', 'otherTag'],
                 // Some options here.
-            }));
+            }))
+            .pipe(gulp.dest('dest'));
     }
 
     gulp.task('default', synchronise);
