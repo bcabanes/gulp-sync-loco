@@ -15,14 +15,17 @@ function locoApi (key) {
     }
 
     /* jshint validthis: true */
-    this.apiKey = key;
+    this.apiKey = String(key).replace(/(\r\n|\n|\r)/gm,"");
     this.baseUrl = 'https://localise.biz/api';
 }
 
 locoApi.prototype.getLocales = function () {
     var options = {
         method: 'GET',
-        uri: this.baseUrl + '/locales?key=' + this.apiKey
+        qs: {
+            key: this.apiKey
+        },
+        uri: this.baseUrl + '/locales'
     };
     return request(options);
 };
@@ -31,21 +34,37 @@ locoApi.prototype.addLocale = function (localeData) {
     var self = this;
     var options = {
         method: 'POST',
+        qs: {
+            key: this.apiKey
+        },
         form: localeData,
-        uri: this.baseUrl + '/locales?key=' + this.apiKey
+        uri: this.baseUrl + '/locales'
     };
 
     return request(options);
 };
 
-locoApi.prototype.exportLocale = function (locale, extension, tags) {
-    // body...
+locoApi.prototype.exportLocale = function (locale, tags) {
+    var options = {
+        method: 'GET',
+        qs: {
+            filter: tags.join(', '),
+            format: 'getText',
+            key: this.apiKey
+        },
+        uri: this.baseUrl + '/export/locale/' + locale + '.json'
+    };
+
+    return request(options);
 };
 
 locoApi.prototype.getTags = function () {
     var options = {
         method: 'GET',
-        uri: this.baseUrl + '/tags?key=' + this.apiKey
+        qs: {
+            key: this.apiKey
+        },
+        uri: this.baseUrl + '/tags'
     };
     return request(options);
 };
@@ -54,8 +73,11 @@ locoApi.prototype.createTag = function (tag) {
     var self = this;
     var options = {
         method: 'POST',
+        qs: {
+            key: this.apiKey
+        },
         form: tag,
-        uri: this.baseUrl + '/tags?key=' + this.apiKey
+        uri: this.baseUrl + '/tags'
     };
 
     return request(options);
@@ -65,12 +87,15 @@ locoApi.prototype.importAsync = function (locale, assets) {
     var self = this;
     var options = {
         method: 'POST',
+        qs: {
+            key: this.apiKey
+        },
         form: {
             async: true,
             locale: locale,
             src: JSON.stringify(assets)
         },
-        uri: this.baseUrl + '/import/json?key=' + this.apiKey
+        uri: this.baseUrl + '/import/json'
     };
 
     return request(options);
@@ -78,18 +103,6 @@ locoApi.prototype.importAsync = function (locale, assets) {
 
 locoApi.prototype.importProgress = function (id) {
     // body...
-};
-
-locoApi.prototype.exportLocale = function (locale, extension, tags) {
-    var options = {
-        method: 'GET',
-        qs: {
-            filter: tags.join(', ')
-        },
-        uri: this.baseUrl + '/export/locale/' + locale + '.' + extension + '?key=' + this.apiKey
-    };
-
-    return request(options);
 };
 
 /**
@@ -100,9 +113,10 @@ locoApi.prototype.getAssets = function (tags) {
     var options = {
         method: 'GET',
         qs: {
-            filter: tags.join(', ')
+            filter: tags.join(', '),
+            key: this.apiKey
         },
-        uri: this.baseUrl + '/assets?key=' + this.apiKey
+        uri: this.baseUrl + '/assets'
     };
 
     return request(options);
@@ -112,10 +126,13 @@ locoApi.prototype.tagAsset = function (assetId, tag) {
     var self = this;
     var options = {
         method: 'POST',
+        qs: {
+            key: this.apiKey
+        },
         form: {
             name: tag
         },
-        uri: this.baseUrl + '/assets/' + assetId + '/tags?key=' + this.apiKey
+        uri: this.baseUrl + '/assets/' + assetId + '/tags'
     };
 
     return request(options);
@@ -125,15 +142,16 @@ locoApi.prototype.setStatus = function (translationId, flag, locale) {
     var self = this;
     var options = {
         method: 'POST',
+        qs: {
+            key: this.apiKey
+        },
         form: {
             flag: flag
         },
-        uri: this.baseUrl + '/translations/' + translationId + '/' + locale + '/flag?key=' + this.apiKey
+        uri: this.baseUrl + '/translations/' + translationId + '/' + locale + '/flag'
     };
 
-    return request(options).catch(function (response) {
-gutil.log(chalk.red(JSON.stringify(response)));
-    });
+    return request(options);
 };
 
 module.exports = locoApi;
