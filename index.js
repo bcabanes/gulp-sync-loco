@@ -3,6 +3,7 @@ var _ = require('lodash');
 var chalk = require('chalk');
 var fs = require('fs');
 var gutil = require('gulp-util');
+var path = require('path');
 var through = require('through2');
 
 /**
@@ -45,7 +46,9 @@ function gulpSyncLoco (options) {
     /**
      * Set all needed variables
      */
-    var firstFile;
+    var content,
+        firstFile,
+        sync;
 
     /**
      * Gulp Sync Loco start processing
@@ -66,17 +69,28 @@ function gulpSyncLoco (options) {
         }
 
         if (file.isBuffer()) {
+            var self = this;
+
             /**
              * Start synchronizing with Loco
              */
-            var content = file.contents.toString();
-            var sync = new Synchronizr(options);
+            content = file.contents.toString();
+            sync = new Synchronizr(options);
             sync.testLocale(options.lang);
             sync.createTags(options.tags);
-            sync.sync(options.lang, options.tags, JSON.parse(content));
+            return sync.sync(options.lang, options.tags, JSON.parse(content))
+                .then(function(merge) {
+                    self.push(new gutil.File({
+                        cwd: __dirname,
+                        base: path.join(__dirname),
+                        path: path.join(__dirname, options.lang + '.json'),
+                        contents: new Buffer(JSON.stringify(merge))
+                    }));
+                });
+
         }
 
-        callback();
+        // callback();
     });
 }
 
