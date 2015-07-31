@@ -145,11 +145,13 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
                     // Tag new tokens and set them to fuzzy status.
                     _.each(fileTokens, function (token, tokenKey) {
                         _.each(tags, function (tag) {
+                            // TODO: wait return to proceed to the next key
                             self.api
                                 .tagAsset(tokenKey, tag);
                         });
 
                         if (token !== '') {
+                            // TODO: wait return to proceed to the next key
                             self.api
                                 .setStatus(tokenKey, 'fuzzy', locale);
                         }
