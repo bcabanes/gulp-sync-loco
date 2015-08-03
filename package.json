@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/bcabanes/gulp-sync-loco",
   "dependencies": {
+    "bluebird": "^2.9.34",
     "chalk": "^1.1.0",
     "flat": "^1.6.0",
     "gulp-util": "^3.0.6",
