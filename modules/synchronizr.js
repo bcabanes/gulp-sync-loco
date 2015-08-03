@@ -3,6 +3,7 @@ var _ = require('lodash');
 var chalk = require('chalk');
 var flatten = require('flat');
 var gutil = require('gulp-util');
+var Promise = require('bluebird');
 var request = require('request-promise');
 var stringify = require('json-stable-stringify');
 var through = require('through2');
@@ -102,7 +103,7 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
             _.each(fileTokens, function (assetValue, assetToken) {
                 _.each(flatApiAssets, function(apiAssetValue, apiAssetKey) {
                     if (apiAssetKey === assetToken) {
-                        gutil.log(chalk.blue(
+                        gutil.log(chalk.grey(
                             'Skip existing asset translated: ' + assetToken + '.'
                         ));
                         delete fileTokens[assetToken];
@@ -122,40 +123,47 @@ Synchronizr.prototype.sync = function (locale, tags, content) {
                     fileTokens[assetToken] = '';
                 }
 
-                gutil.log(chalk.yellow(
-                    'Import asset: ' + assetToken + '.'
-                ));
+                gutil.log('Import asset: ' + assetToken + '.');
             });
 
             if (Object.keys(fileTokens).length < 1) {
-                gutil.log(chalk.green(
-                    'No token to synchronize.'
-                ));
+                gutil.log(chalk.green('No token to synchronize.'));
                 return _.extend(fileTokens, flatApiAssets);
             }
 
-            gutil.log(chalk.yellow(
-                'Will import '+ Object.keys(fileTokens).length +' asset(s).'
-            ));
+            gutil.log('Will import '+ Object.keys(fileTokens).length +' asset(s).');
 
             // Import tokens to api.
             self.api
                 .importAsync(locale, fileTokens)
                 .then(function () {
-                    // Tag new tokens and set them to fuzzy status.
-                    _.each(fileTokens, function (token, tokenKey) {
-                        _.each(tags, function (tag) {
-                            // TODO: wait return to proceed to the next key
-                            self.api
-                                .tagAsset(tokenKey, tag);
-                        });
 
-                        if (token !== '') {
-                            // TODO: wait return to proceed to the next key
-                            self.api
-                                .setStatus(tokenKey, 'fuzzy', locale);
-                        }
+                    var keys = [];
+                    _.each(fileTokens, function(token, key) {
+                        keys.push(key);
                     });
+
+                    /**
+                     * Tag assets with tags given in series.
+                     */
+                    keys.reduce(function(promise, value) {
+                        return promise.then(function() {
+                            gutil.log('Tag asset "' + value + '" with [' + tags + '].');
+                            return Promise.resolve(self.api
+                                .tagAsset(value, tags));
+                        });
+                    }, Promise.resolve());
+
+                    /**
+                     * Flag assets as fuzzy in series.
+                     */
+                    keys.reduce(function(promise, value) {
+                        return promise.then(function() {
+                            gutil.log('Flag asset "' + value + '" as "Fuzzy".');
+                            return Promise.resolve(self.api
+                                    .setStatus(value, 'fuzzy', locale));
+                        });
+                    }, Promise.resolve());
 
                 });
             return _.extend(fileTokens, flatApiAssets);
