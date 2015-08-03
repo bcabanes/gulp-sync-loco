@@ -169,6 +169,9 @@ Synchronizr.prototype.process = function (locale, tags, content) {
                      */
                     keys.reduce(function(promise, value) {
                         return promise.then(function() {
+                            if (fileTokens[value] === '' || _.isNull(fileTokens[value])) {
+                                return Promise.resolve();
+                            }
                             gutil.log('Flag asset "' + value + '" as "Fuzzy".');
                             return Promise.resolve(self.api
                                     .setStatus(value, 'fuzzy', locale));
