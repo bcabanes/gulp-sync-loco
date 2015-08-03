@@ -49,49 +49,59 @@ function Synchronizr (options) {
     this.api = new locoApi(options.apiKey);
 }
 
-/**
- * TODO: use mapping like [en][en_US, en_CA] ...
- */
-Synchronizr.prototype.convertLocale = function (locale) {
-    return locale + '_CA';
-};
-
 Synchronizr.prototype.testLocale = function (locale) {
     var self = this,
-        convertedLocale = this.convertLocale(locale),
         locoLocales = [];
 
-    this.api
+    return this.api
         .getLocales()
         .then(function (apiLocales) {
             _.each(apiLocales, function (apiLocale) {
                 locoLocales.push(apiLocale.code);
             });
 
-            if (locoLocales.indexOf(convertedLocale) === -1) {
-                locoLocales.push(convertedLocale);
-                self.api
-                    .addLocale({code: convertedLocale});
+            if (locoLocales.indexOf(locale) < 0) {
+                locoLocales.push(locale);
+                gutil.log('Locale "' + locale + '" added.');
+                return Promise.resolve(self.api
+                    .addLocale({code: locale}));
             }
+
+            return true;
+        })
+        .catch(function (response) {
+            gutil.log(
+                chalk.red('TestLocale error: \n' + JSON.stringify(response))
+            );
         });
 };
 
 Synchronizr.prototype.createTags = function (tags) {
     var self = this;
 
-    this.api
+    return this.api
         .getTags()
         .then(function (apiTags) {
-            _.each(tags, function (tag) {
-                if (apiTags.indexOf(tag) === -1) {
-                    self.api
-                        .createTag({name: tag});
-                }
-            });
+
+            /**
+             * Create tags with tags given in series.
+             */
+            return tags.reduce(function(promise, value) {
+                return promise.then(function() {
+                    gutil.log('Create tag "' + value + '".');
+                    return Promise.resolve(self.api
+                        .createTag({name : value}));
+                });
+            }, Promise.resolve());
+        })
+        .catch(function (response) {
+            gutil.log(
+                chalk.red('Create tags error: \n' + JSON.stringify(response))
+            );
         });
 };
 
-Synchronizr.prototype.sync = function (locale, tags, content) {
+Synchronizr.prototype.process = function (locale, tags, content) {
     var skipToken = false,
         self = this;
 

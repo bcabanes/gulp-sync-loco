@@ -76,9 +76,9 @@ function gulpSyncLoco (options) {
              */
             content = file.contents.toString();
             sync = new Synchronizr(options);
-            sync.testLocale(options.lang);
-            sync.createTags(options.tags);
-            return sync.sync(options.lang, options.tags, JSON.parse(content))
+            return sync.testLocale()
+                .then(sync.createTags(options.lang))
+                .then(sync.process(options.lang, options.tags, JSON.parse(content)))
                 .then(function(merge) {
                     self.push(new gutil.File({
                         cwd: __dirname,
