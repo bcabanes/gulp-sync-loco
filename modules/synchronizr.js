@@ -67,7 +67,7 @@ Synchronizr.prototype.testLocale = function (locale) {
                     .addLocale({code: locale}));
             }
 
-            return true;
+            return Promise.resolve(true);
         })
         .catch(function (response) {
             gutil.log(
@@ -102,84 +102,92 @@ Synchronizr.prototype.createTags = function (tags) {
 };
 
 Synchronizr.prototype.process = function (locale, tags, content) {
-    var skipToken = false,
+    var merge = false,
+        diff = false,
         self = this;
 
     return this.api
         .exportLocale(locale, tags)
         .then(function (apiAssets) {
-            var flatApiAssets = flatten(JSON.parse(apiAssets));
-            var fileTokens = _.clone(content);
-            _.each(fileTokens, function (assetValue, assetToken) {
-                _.each(flatApiAssets, function(apiAssetValue, apiAssetKey) {
-                    if (apiAssetKey === assetToken) {
-                        gutil.log(chalk.grey(
-                            'Skip existing asset translated: ' + assetToken + '.'
-                        ));
-                        delete fileTokens[assetToken];
-                        skipToken = true;
-                        return;
+            return self.parseTokens(flatten(JSON.parse(apiAssets)), content);
+        })
+        .then(function (tokens) {
+            merge = tokens.merge;
+            diff = tokens.diff;
+            return self.import(locale, tokens.diff);
+        })
+        .then(function (keys) {
+            /**
+             * Tag assets with tags given in series.
+             */
+            keys.reduce(function(promise, value) {
+                return promise.then(function() {
+                    gutil.log('Tag asset "' + value + '" with [' + tags + '].');
+                    return Promise.resolve(self.api
+                        .tagAsset(value, tags));
+                });
+            }, Promise.resolve());
+
+            /**
+             * Flag assets as fuzzy in series.
+             */
+            keys.reduce(function(promise, value) {
+                return promise.then(function() {
+                    if (diff[value] === '' || _.isNull(diff[value])) {
+                        return Promise.resolve();
                     }
+                    gutil.log('Flag asset "' + value + '" as "Fuzzy".');
+                    return Promise.resolve(self.api
+                            .setStatus(value, 'fuzzy', locale));
                 });
+            }, Promise.resolve());
 
-                if (skipToken) {
-                    skipToken = false;
-                    return;
-                }
+            return merge;
+        });
+};
 
-                // TODO: make this an option.
-                // Will not import null value.
-                if (typeof assetValue === null) {
-                    fileTokens[assetToken] = '';
-                }
+Synchronizr.prototype.parseTokens = function (apiAssets, fileTokens) {
+    var skipToken = false;
 
-                gutil.log('Import asset: ' + assetToken + '.');
-            });
-
-            if (Object.keys(fileTokens).length < 1) {
-                gutil.log(chalk.green('No token to synchronize.'));
-                return _.extend(fileTokens, flatApiAssets);
+    _.each(fileTokens, function (assetValue, assetToken) {
+        _.each(apiAssets, function(apiAssetValue, apiAssetKey) {
+            if (apiAssetKey === assetToken) {
+                gutil.log(chalk.grey(
+                    'Skip existing asset translated: ' + assetToken + '.'
+                ));
+                delete fileTokens[assetToken];
+                skipToken = true;
             }
+        });
 
-            gutil.log('Will import '+ Object.keys(fileTokens).length +' asset(s).');
+        if (skipToken) {
+            skipToken = false;
+            return;
+        }
 
-            // Import tokens to api.
-            self.api
-                .importAsync(locale, fileTokens)
-                .then(function () {
+        // TODO: make this an option.
+        // Will not import null value.
+        if (typeof assetValue === null) {
+            fileTokens[assetToken] = '';
+        }
+    });
 
-                    var keys = [];
-                    _.each(fileTokens, function(token, key) {
-                        keys.push(key);
-                    });
+    return Promise.resolve({
+        diff: _.clone(fileTokens),
+        merge: _.extend(fileTokens, apiAssets)
+    });
+};
 
-                    /**
-                     * Tag assets with tags given in series.
-                     */
-                    keys.reduce(function(promise, value) {
-                        return promise.then(function() {
-                            gutil.log('Tag asset "' + value + '" with [' + tags + '].');
-                            return Promise.resolve(self.api
-                                .tagAsset(value, tags));
-                        });
-                    }, Promise.resolve());
-
-                    /**
-                     * Flag assets as fuzzy in series.
-                     */
-                    keys.reduce(function(promise, value) {
-                        return promise.then(function() {
-                            if (fileTokens[value] === '' || _.isNull(fileTokens[value])) {
-                                return Promise.resolve();
-                            }
-                            gutil.log('Flag asset "' + value + '" as "Fuzzy".');
-                            return Promise.resolve(self.api
-                                    .setStatus(value, 'fuzzy', locale));
-                        });
-                    }, Promise.resolve());
-
-                });
-            return _.extend(fileTokens, flatApiAssets);
+Synchronizr.prototype.import = function (locale, tokens) {
+    return this.api
+        .importAsync(locale, tokens)
+        .then(function () {
+            var keys = [];
+            _.each(tokens, function(token, key) {
+                keys.push(key);
+                gutil.log(chalk.green('Imported asset: ' + token + '.'));
+            });
+            return keys;
         });
 };
 
