@@ -49,7 +49,7 @@ locoApi.prototype.exportLocale = function (locale, tags) {
         method: 'GET',
         qs: {
             filter: tags.join(', '),
-            format: 'getText',
+            format: 'ng-getText',
             key: this.apiKey
         },
         uri: this.baseUrl + '/export/locale/' + locale + '.json'
@@ -88,8 +88,8 @@ locoApi.prototype.importAsync = function (locale, assets) {
     var options = {
         method: 'POST',
         qs: {
-            // async: true,
-            // index: 'id',
+            async: false,
+            index: 'id',
             key: this.apiKey,
             locale: locale
         },
