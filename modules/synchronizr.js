@@ -185,7 +185,7 @@ Synchronizr.prototype.import = function (locale, tokens) {
             var keys = [];
             _.each(tokens, function(token, key) {
                 keys.push(key);
-                gutil.log(chalk.green('Imported asset: ' + token + '.'));
+                gutil.log(chalk.green('Imported asset: ' + key + '.'));
             });
             return keys;
         });
